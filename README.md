@@ -8,9 +8,9 @@
 ## 📚 目录
 
 ### 数据结构
-* [Array数组](/docs/datastruct.md/##Array数组)
-* [Slice切片](/docs/datastruct.md/##Slice切片)
-* [String字符串](/docs/datastruct.md/##String字符串)
-* [Map哈希表](/docs/datastruct.md/##Map哈希表)
+* [Array数组](/GoGuide/docs/datastruct.html/#Array数组)
+* [Slice切片](/GoGuide/docs/datastruct.html/#Slice切片)
+* [String字符串](/GoGuide/docs/datastruct.html/#String字符串)
+* [Map哈希表](/GoGuide/docs/datastruct.html/#Map哈希表)
 
 ### GC垃圾回收
