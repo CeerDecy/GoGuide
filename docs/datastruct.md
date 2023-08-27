@@ -8,6 +8,53 @@
 ## Slice切片
 > 和C、C++中的Array数组一样，在Golang中数组也是定长的，每次定义的时候大小就已经固定了，而这也意味着数组的具有一定的局限性。为提高数组的灵活性，C++中可以用vector，Java中可以选择ArrayList，而在Golang中与他们对应的便是Slice啦。
 
+### 基础用法
+
+* **初始化**
+
+  1. 使用make初始化，`make([]type,len,cap)`其中cap参数可以省略，省略后其默认值等于len
+
+  ```go
+  slice := make([]int,3,6)	// 使用make初始化Slice
+  slice := make([]int,3)		// 省略cap
+  ```
+
+  2. 可以通过具体的元素来初始化，其默认的len和cap就是元素的个数
+
+  ```go
+  slice := []int{3,4,5}
+  ```
+
+  3. 使用已有的切片或者数组进行初始化，`oldSlice[start:end]`，这种方法可以理解为将已有的切片或者数组进行截取（左闭右开），start和end省略时分别表示从第一个元素开始、到最后一个元素结束
+
+  ```go
+  slice := old[3:6]
+  slice := old[3:]
+  slice := old[:6]
+  slice := old[:]
+  ```
+
+* **增加元素**
+
+  1. 使用append函数添加元素。要添加元素的个数可以是1个或以上
+
+  ```go
+  slice = append(slice,6,7,8)
+  ```
+
+  2. append也可以将两个slice合并，这里的`old`也是一个slice，在它后面加三个点就可以将其内部元素取出来作为append的参数
+
+  ```go
+  slice = append(slice,old...)
+  ```
+
+* **删除元素**
+  Slice删除元素的操作可以使用截取的方式
+
+  ```go
+  slice = slice[3:6]
+  ```
+
 ### 底层结构
 
 咱先来看一下Slice有哪几部分组成：
