@@ -12,20 +12,20 @@
 
 * **初始化**
 
-  1. 使用make初始化，`make([]type,len,cap)`其中cap参数可以省略，省略后其默认值等于len
+  1. 使用make初始化，`make([]type,len,cap)`其中cap参数可以省略，省略后其默认值等于len。
 
   ```go
   slice := make([]int,3,6)	// 使用make初始化Slice
   slice := make([]int,3)		// 省略cap
   ```
 
-  2. 可以通过具体的元素来初始化，其默认的len和cap就是元素的个数
+  2. 可以通过具体的元素来初始化，其默认的len和cap就是元素的个数。
 
   ```go
   slice := []int{3,4,5}
   ```
 
-  3. 使用已有的切片或者数组进行初始化，`oldSlice[start:end]`，这种方法可以理解为将已有的切片或者数组进行截取（左闭右开），start和end省略时分别表示从第一个元素开始、到最后一个元素结束
+  3. 使用已有的切片或者数组进行初始化，`oldSlice[start:end]`，这种方法可以理解为将已有的切片或者数组进行截取（左闭右开），start和end省略时分别表示从第一个元素开始、到最后一个元素结束。
 
   ```go
   slice := old[3:6]
@@ -36,20 +36,20 @@
 
 * **增加元素**
 
-  1. 使用append函数添加元素。要添加元素的个数可以是1个或以上
+  1. 使用append函数添加元素。要添加元素的个数可以是1个或以上。
 
   ```go
   slice = append(slice,6,7,8)
   ```
 
-  2. append也可以将两个slice合并，这里的`old`也是一个slice，在它后面加三个点就可以将其内部元素取出来作为append的参数
+  2. append也可以将两个slice合并，这里的`old`也是一个slice，在它后面加三个点就可以将其内部元素取出来作为append的参数。
 
   ```go
   slice = append(slice,old...)
   ```
 
 * **删除元素**
-  Slice删除元素的操作可以使用截取的方式
+  Slice删除元素的操作可以使用截取的方式。
 
   ```go
   slice = slice[3:6]
@@ -78,9 +78,9 @@ type slice struct {
 
 Slice的初始化可以有一下几个方式：
 
-1. 使用make初始化
-2. 通过已存在的切片或者数组初始化
-3. 通过具体元素初始化
+1. 使用make初始化。
+2. 通过已存在的切片或者数组初始化。
+3. 通过具体元素初始化。
 
 ```go
 slice := make([]int,3)
@@ -154,9 +154,9 @@ slice = append(slice,10)
 
   这里`growslice`函数中的cap参数指的就是扩容的期望容量，而通过分析代码不难看出：
 
-  * 如果期望容量大于当前容量的2倍，则新Slice的容量就是期望容量的大小
-  * 如果当前容量小于1024，那么新Slice的容量则是原来的2倍
-  * 如果当前容量大于1024，那么新Slice的容量每次增加25%，直到新容量`>=`期望容量
+  * 如果期望容量大于当前容量的2倍，则新Slice的容量就是期望容量的大小。
+  * 如果当前容量小于1024，那么新Slice的容量则是原来的2倍。
+  * 如果当前容量大于1024，那么新Slice的容量每次增加25%，直到新容量`>=`期望容量。
 
 ![image-20230825003116777](../res/img/datastruct/1.17growslice.png)
 
@@ -203,9 +203,9 @@ slice = append(slice,10)
 
   在1.18过后原本1024的阈值修改成了256，扩容规则也略微发生了变化：
 
-  * 如果期望容量大于当前容量的2倍，则新Slice的容量就是期望容量的大小
-  * 如果当前容量小于256，那么新Slice的容量则是原来的2倍
-  * 如果当前容量大于256，那么新Slice的容量每次增加`旧容量+3*256`的 25%，直到新容量`>=`期望容量
+  * 如果期望容量大于当前容量的2倍，则新Slice的容量就是期望容量的大小。
+  * 如果当前容量小于256，那么新Slice的容量则是原来的2倍。
+  * 如果当前容量大于256，那么新Slice的容量每次增加`旧容量+3*256`的 25%，直到新容量`>=`期望容量。
 
 ![image-20230825003116777](../res/img/datastruct/1.18growslice.png)
 
@@ -270,4 +270,90 @@ func change(course []string) {
 
 > 敬请期待
 ## Map哈希表
-> 敬请期待
+> map当然是一种比较常见的数据类型，主要特点是读取、修改、删除数据的时间复杂度一般都在O(n)，本质上是以空间换时间的思想来提高查询效率。
+
+### 基础用法
+
+* **初始化**
+
+  1. map的初始化同样可以使用`make(map[key_Type]val_Type,size)`，其中size参数可以省略，它的作用是确定map的大小（本质是hmap结构体中B的值，具体请看底层部分）。
+
+  ```go
+  dict := make(map[string]int)
+  ```
+
+  2. 直接定义，也将已有的key-value写出来。
+
+  ```go
+  dict := map[string]int{}
+  
+  dict := map[string]int{
+    "a":1,
+    "b":2
+  }
+  ```
+
+* **读取数据**
+
+  1. 直接读取，若当前key对应的值不存在则会返回nil。
+
+  ```go
+  val := dict["a"]
+  ```
+
+  2. 也可以用两个变量获取，`ok`是一个`bool`类型的数据，为false时说明当前值不存在，即`val`为nil。
+
+  ```go
+  val,ok := dict["a"]
+  ```
+
+* **写入or修改数据**
+
+  ```go
+  dict["c"] = 3
+  ```
+
+* **删除数据**
+
+  调用`delete`内置函数可以将map中的值删除，第一个参数为要删除的map，第二个参数为要删除的`key`。
+
+  ```go
+  delete(dict,"a")
+  ```
+
+### 底层结构
+
+map的源码在`src/runtime/map.go`这个文件中，我们第一眼看到的就是hmap这个结构体。
+
+```go
+// Go版本 1.20
+type hmap struct {
+	// Note: the format of the hmap is also encoded in cmd/compile/internal/reflectdata/reflect.go.
+	// Make sure this stays in sync with the compiler's definition.
+	count     int // # live cells == size of map.  Must be first (used by len() builtin)
+	flags     uint8
+	B         uint8  // log_2 of # of buckets (can hold up to loadFactor * 2^B items)
+	noverflow uint16 // approximate number of overflow buckets; see incrnoverflow for details
+	hash0     uint32 // hash seed
+
+	buckets    unsafe.Pointer // array of 2^B Buckets. may be nil if count==0.
+	oldbuckets unsafe.Pointer // previous bucket array of half the size, non-nil only when growing
+	nevacuate  uintptr        // progress counter for evacuation (buckets less than this have been evacuated)
+
+	extra *mapextra // optional fields
+}
+```
+
+* **count :** 用于记录map中键值对的个数，使用`len()`内置函数可以获取。因此获取map中键值对个数的时间复杂度为O(1)
+* **flags : **用于标记当前map的状态，如：是否在扩容状态。
+* **B : **这个参数就是map的大小，用于确定”桶“的数量。但B的值并不直接表示桶的数量，2的B次方才是”桶“的数量。
+* **noverflow : **溢出桶近似的数量。
+* **hash0 : **hash种子。
+* **buckets : **它是指针类型，但本质其实是`bmap`数组，它的长度为2的B次方。如果`count`元素的个数为0，那么这个buckets则为nil。
+* **oldbuckets : **它和`buckets`一样，也是`bmap`数组，它的作用是在map进行扩容的时候存储旧的`buckets`，如果当前map不在扩容，则为nil。
+* **nevacuate : **这是一个指针类型的数据，它用于记录扩容的进度，小于该值的桶已经完成了迁移。
+* **extra : **`mapextra`结构体指针，用于存储溢出桶。
+
+> Tips: 溢出桶指的是：`buckets`数组中的`bmap`链接了多个`bmap`（拉链法），那么这些多出来的`bmap`就属于溢出桶。当溢出桶达到一定数量说明有很多数据无法再O(1)的时间复杂度内获取数据，这时就需要进行扩容。这里简单贴一张图解释一下，红色部分就是溢出桶的部分，具体我们等到讲解bmap的时候细说。
+
+![image-20230825003116777](../res/img/datastruct/overflowbuckets.png)
