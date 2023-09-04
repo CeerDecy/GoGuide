@@ -75,7 +75,3 @@ go tool compile -m=2 main.go
 /GoProject/Main/main/main.go:11:6: can inline max2 with cost 8 as: func(int, int) int { if a > b { return a }; return b }
 /GoProject/Main/main/main.go:18:6: can inline main with cost 0 as: func() {  }
 ```
-
-
-
-## 2. 逃逸分析
