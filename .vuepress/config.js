@@ -24,7 +24,8 @@ export default defineUserConfig({
                 link :'/'
             },
             '/docs/datastruct.md',
-            '/docs/gc.md'
+            '/docs/gc.md',
+            '/docs/compiler.md'
         ],
     }),
     plugins: [
