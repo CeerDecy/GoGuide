@@ -321,9 +321,60 @@ func change(course []string) {
   delete(dict,"a")
   ```
 
+### 哈希原理
+
+在讲解底层结构之前，我们需要先了解两种常见的解决**Hash冲突**的方法，分别是： **开放地址发法** 、 **拉链法**。
+
+#### 哈希冲突
+我们都知道map中的键值对是存储在Bucket（桶）中的，那么当我存储一个”键值对“时，需要对key进行hash运算，再使用当前桶的数量对hash值进行取余就可以确定我们要存储在哪一个桶中。
+
+```go
+h := hash(key)							// 计算当前key的hash值
+index := h % len(buckets)		// 将计算出的hash值对桶的个数进行取余
+```
+
+经过上述操作就可以确定我这个key要存储在哪个位置。但是肯定有一种情况：我有两个不同的key，计算出的`index`是相同的。假设key1的hash值是21，key2的hash值是31，恰好我当前桶的数量是10，那么对key1和key2取余都可以得到`index`的值为1。如果我先将key1的值存储到bucket中，那么等我存储key2的时候该何去何从呢？这就是哈希冲突，接下来介绍两种常见的解决方法。
+
+#### 开放地址法
+
+开放地址法并不要求当前的桶必须存储对应的hash值，若当前的桶中有值那么就往后查找，直到有一个桶为空，就把当前的数据存储到这个桶中。
+
+* **存储**
+  假设我们要存储一个hash值为51的key，当前桶的数量为10。通过hash计算我们可以得出我们要存储的key应该存放在1号桶中，可是1号桶已经有值了，于是就向后查询2号桶；可2号桶也有值，那么继续找3号桶。最终当找到4号桶时发现其为`nil`，那最终将key存储在4号桶中（具体数据会包含对应的key和value，这里使用hash表示该数据省略了其具体数据部分）。
+
+<img src="../res/img/datastruct/openhash.png" alt="image-20230825003116777" style="zoom:50%;" />
+
+* **读取**
+  和存储一样，首先确定当前key对应的桶，然后已经对比，如果当前桶中的key和自己的key不一致，那就继续查询下一个桶。若查找的下一个桶中的数据为`nil`，那么说明当前key并没有在当前map中存在。
+
+  <img src="../res/img/datastruct/map-1693389931.png" alt="map-1693389931.png" style="zoom:50%;" />
+
+我们同样假设读取hash值为51的key，确定为1号桶后依次比对，直到遍历到4号桶发现其值为`nil`，那么说明hash值为51的桶在这个map中不存在。如果我们读取hash值为41的数据，同样在确定1号桶后依次遍历，直到3号桶发现key值相等，那么就可以读取该数据了。
+
+这里也有一个问题，如果我将2号桶中的数据删除了，还可以读取到hash值为41的数据嘛？答案是可以，这里的删除并不会将其设置为`nil`，而是设置为`empty`状态标记为删除，这样可以让hash值为41的数据可以继续往后遍历。
+
+<img src="../res/img/datastruct/map-1693390954.png" alt="map-1693390954.png" style="zoom:50%;" />
+
+* **不足**
+  很显然这样的解决方案如果在bucket很多都存满的情况下效率可能会降为O(n)
+
+#### 拉链法
+
+顾名思义，拉链法是使用链表的方式将同一个桶中的元素以链表的形式进行链接，以此来解决Hash冲突。这也是大多数语言的首选方案。
+
+* **存储**
+  我们同样以存储hash值为51的元素为例：在经过计算后确定了`index`的值为1，即将要存储在1号桶，但由于1号桶中已经有元素了，于是就遍历1 号桶的链表直到为`nil`，将我们的51元素存到这个链表的末尾。
+
+<img src="../res/img/datastruct/map-1693751083.png" alt="map-1693751083.png" style="zoom:50%;" />
+
+* **读取**
+  对于拉链法元素的读取就很好理解了。在确定好哪一个桶过后，只需要遍历该桶找到一个key的值和要查找的key相等即可，若没有找到则说明数据不存在。
+
 ### 底层结构
 
-map的源码在`src/runtime/map.go`这个文件中，我们第一眼看到的就是hmap这个结构体。
+#### hmap
+
+map的源码在`src/runtime/map.go`这个文件中，我们第一眼看到的就是hmap这个结构体，这个也是map的主体。
 
 ```go
 // Go版本 1.20
@@ -354,6 +405,74 @@ type hmap struct {
 * **nevacuate :** 这是一个指针类型的数据，它用于记录扩容的进度，小于该值的桶已经完成了迁移。
 * **extra :** `mapextra`结构体指针，用于存储溢出桶。
 
-> Tips: 溢出桶指的是：`buckets`数组中的`bmap`链接了多个`bmap`（拉链法），那么这些多出来的`bmap`就属于溢出桶。当溢出桶达到一定数量说明有很多数据无法再O(1)的时间复杂度内获取数据，这时就需要进行扩容。这里简单贴一张图解释一下，红色部分就是溢出桶的部分，具体我们等到讲解bmap的时候细说。
+> Tips: 溢出桶指的是：`buckets`数组中的`bmap`链接了多个`bmap`（拉链法），那么这些多出来的`bmap`就属于溢出桶。当溢出桶达到一定数量说明有很多数据无法再O(1)的时间复杂度内获取数据，这时就需要进行扩容。这里简单贴一张图解释一下，红色部分就是溢出桶的部分，具体我们等到讲解`mapextra`的时候细说。
 
-![image-20230825003116777](../res/img/datastruct/overflowbuckets.png)
+<img src="../res/img/datastruct/overflowbuckets.png" alt="image-20230825003116777" style="zoom:50%;" />
+
+#### bmap
+
+接下来我们需要介绍一下`bmap`这个结构体，这个结构体其实就是单个”桶“的结构，`buckets`的类型就是`bmap`。
+
+```go
+// A bucket for a Go map.
+type bmap struct {
+	tophash [bucketCnt]uint8
+}
+```
+
+我们看`src/runtime/map.go`这个文件中的`bmap`结构体是上面这个样子的，但其实`bmap`内部的结构在源码中并没有显式，而是在编译期才确定下来的，因为map中的key和value的类型可能是各种各样的，而注释中写到bmap存储key-value的形式并不是一个key一个value进行存储的，而是把key放一起，value也放一起，正确的结构体应该这样：
+
+```go
+type bmap struct {
+    topbits  [8]uint8
+    keys     [8]KeyType
+    values   [8]ValueType
+    overflow uintptr
+}
+```
+
+* **topbits :** 这个一个uint8的数组，它存储的是每个key进行hash计算后的高8位数据。
+* **keys :** 它存储了所以key值，类型在编译期确定下来。
+* **values :** 它就是每个key对应的value值，类型同样是在编译期确定的。
+* **overflow :** 链接的下一个bmap的指针，即溢出桶
+
+```go
+	// NOTE: packing all the keys together and then all the elems together makes the
+	// code a bit more complicated than alternating key/elem/key/elem/... but it allows
+	// us to eliminate padding which would be needed for, e.g., map[int64]int8.
+	// Followed by an overflow pointer.
+```
+
+通过注释我们知道这么设计bmap的好处就是保证了bmap内部的内存对齐，而对于bmap的操作也是通过计算偏移量来实现的。具体的bmap结构就是这样的啦。
+
+![](../res/img/datastruct/bmapstruct.png)
+
+#### mapextra
+
+这个结构体是用来存储溢出桶的，具体结构如下：
+
+```go
+type mapextra struct {
+	// If both key and elem do not contain pointers and are inline, then we mark bucket
+	// type as containing no pointers. This avoids scanning such maps.
+	// However, bmap.overflow is a pointer. In order to keep overflow buckets
+	// alive, we store pointers to all overflow buckets in hmap.extra.overflow and hmap.extra.oldoverflow.
+	// overflow and oldoverflow are only used if key and elem do not contain pointers.
+	// overflow contains overflow buckets for hmap.buckets.
+	// oldoverflow contains overflow buckets for hmap.oldbuckets.
+	// The indirection allows to store a pointer to the slice in hiter.
+	overflow    *[]*bmap
+	oldoverflow *[]*bmap
+
+	// nextOverflow holds a pointer to a free overflow bucket.
+	nextOverflow *bmap
+}
+```
+
+* **overflow :** 一个切片的地址，切片的类型是`bmap`结构体的指针。它的作用是将所有的溢出桶都维护成一个顺序表。
+* **oldoverflow :** 用于维护`oldbuckets`中的溢出桶，在map进行扩容的时候会用到。
+* **nextOverflow :** 为了减少溢出桶的频繁创建和删除，Golang维护了一个溢出桶池。nextOverflow就指向了溢出桶池中的一个空闲的桶，当需要使用溢出桶时则直接使用nextOverflow就可以了。
+
+#### 整体结构
+
+<img src="../res/img/datastruct/map-1693799339.png" alt="image-20230825003116777" style="zoom:50%;" />
