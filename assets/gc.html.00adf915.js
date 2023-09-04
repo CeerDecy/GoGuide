@@ -1,0 +1,1 @@
+const e=JSON.parse('{"key":"v-63d3d1bc","path":"/docs/gc.html","title":"垃圾回收","lang":"zh_CN","frontmatter":{},"excerpt":"","headers":[],"git":{"updatedTime":1692881082000,"contributors":[{"name":"CeerDecy","email":"1748788674@qq.com","commits":1}]},"filePathRelative":"docs/gc.md"}');export{e as data};
